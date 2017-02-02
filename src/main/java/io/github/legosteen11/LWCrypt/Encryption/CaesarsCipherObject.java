@@ -18,8 +18,10 @@ public class CaesarsCipherObject {
     }
     
     public String decrypt(int key) {
+        this.key = key;
+        
         StringBuilder plainTextBuilder = new StringBuilder();
-        ArrayList<Integer> charIntArray = new ArrayList<Integer>();
+        ArrayList<Integer> charIntArray = new ArrayList<>();
         
         for (char character :
                 cipherText.toCharArray()) {
