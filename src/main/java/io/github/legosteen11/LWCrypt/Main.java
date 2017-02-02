@@ -20,6 +20,17 @@ public class Main {
         if(args.length > 0) {
             String option = args[0];
             switch (option) {
+                case "encrypt":
+                    if(args.length == 4) {
+                        String algo = args[1];
+                        String key = args[2];
+                        String plainText = args[3];
+                        if(encrypt(algo, key, plainText)) {
+                            return;
+                        }
+                        System.out.println("Usage: java -jar LWCrypt.jar encrypt <algorithm> <key> <cipher>");
+                        System.out.println("You can use these algorithms: caesar");
+                    }
                 case "decrypt":
                     if(args.length == 4) {
                         String algo = args[1];
@@ -64,6 +75,7 @@ public class Main {
             case "caesar":
                 CaesarsCipherObject caesarsCipherObject = new CaesarsCipherObject(cipherText); // Create a new object with the cipher text
                 result = caesarsCipherObject.decrypt(Integer.parseInt(key)); // Set the result with the decryption key
+                break;
         }
 
         if (result == null) { // Something went wrong
@@ -72,6 +84,27 @@ public class Main {
         } else {
             System.out.println("Decryption successful, from: ");
             System.out.println(cipherText);
+            System.out.println("To: ");
+            System.out.println(result);
+        }
+        return true;
+    }
+    
+    public static boolean encrypt(String algo, String key, String plainText) {
+        String result = null;
+        switch(algo) {
+            case "caesar":
+                CaesarsCipherObject caesarsCipherObject = new CaesarsCipherObject();
+                result = caesarsCipherObject.encrypt(plainText, Integer.parseInt(key));
+                break;
+        }
+        
+        if(result == null) {
+            System.out.println("Decryption failed!");
+            return false;
+        } else {
+            System.out.println("Encryption successful, from: ");
+            System.out.println(plainText);
             System.out.println("To: ");
             System.out.println(result);
         }
