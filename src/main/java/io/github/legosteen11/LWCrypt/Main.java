@@ -2,10 +2,9 @@ package io.github.legosteen11.LWCrypt;
 
 import com.google.common.base.Stopwatch;
 import io.github.legosteen11.LWCrypt.Encryption.CaesarsCipherObject;
+import io.github.legosteen11.LWCrypt.Encryption.Decrypted;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Arrays;
+import java.io.*;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +12,7 @@ import java.util.concurrent.TimeUnit;
  * Created by wouter on 2-2-17.
  */
 public class Main {
+    public static final int AMOUNT_OF_ALGOS = 1;
     // Voorbeeldtekst: ditberichtisversleuteldmeteenbestwelgoedesleutelmaardevraagisofdesleutelgoedgenoegiswiezoudatweteniknietiniedergeval
     // Voorbeeldtekst versleuteld met caesar -5: inygjwnhmynxajwxqjzyjqirjyjjsgjxybjqltjijxqjzyjqrffwijawfflnxtkijxqjzyjqltjiljstjlnxbnjetzifybjyjsnpsnjynsnjijwljafq
     
@@ -51,7 +51,7 @@ public class Main {
                         }
                     }
                     System.out.println("Usage: java -jar LWCrypt.jar crack <algorithm> <language> <correct words needed> <cipher>");
-                    System.out.println("You can use these algorithms: caesar");
+                    System.out.println("You can use these algorithms: GUESS, caesar");
                     System.out.println("You can use these languages: nl, en");
             }
         }
@@ -79,11 +79,8 @@ public class Main {
     }
     
     public static boolean crack(String algo, String cipherText, String language, int correctWordsNeeded) {
-        String key = null;
-        String plainText = null;
         String dictionaryPath = "en_dict.txt";
-        String timeNeededInMilliseconds = "";
-        Stopwatch stopwatch = Stopwatch.createStarted();
+        Decrypted decrypted = null;
         switch (language) {
             case "nl":
                 dictionaryPath = "nl_dict.txt";
@@ -92,66 +89,95 @@ public class Main {
                 dictionaryPath = "en_dict.txt";
                 break;
         }
-        File dictionary;
+        //File inputDictionary;
+        InputStream inputDictionary;
+        String[] dictionaryArray = null;
         try {
-            dictionary = new File(Main.class.getClassLoader().getResource(dictionaryPath).getFile());
+            //inputDictionary = new File(Main.class.getClassLoader().getResource(dictionaryPath).getFile());
+            inputDictionary = Main.class.getClassLoader().getResourceAsStream(dictionaryPath);
         } catch (NullPointerException e) {
             return false;
         }
+        
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputDictionary))) {
+            dictionaryArray = bufferedReader.lines().toArray(String[]::new);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        
         switch (algo) {
             case "caesar":
-                CaesarsCipherObject caesarsCipherObject = new CaesarsCipherObject(cipherText);
-                boolean cracked = false;
-                for(int i = 0; i < 26 && !cracked; i++) {
-                    if(i == 0) {
-                        continue; // CipherText would already be plaintext...
-                    }                    
-                    String currentTry = caesarsCipherObject.decrypt(i);
-                    
-                    if(isCorrect(currentTry, dictionary, correctWordsNeeded)) cracked = true;
-                    
-                    if(cracked) {
-                        stopwatch.stop();
-                        timeNeededInMilliseconds = "" + stopwatch.elapsed(TimeUnit.MILLISECONDS);
-                        key = "" + i;
-                        plainText = currentTry;
+                System.out.println("Using Caesar algorithm.");
+                decrypted = decryptCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
+                break;
+            case "GUESS":
+                System.out.println("Guessing algorithm... ");
+                decrypted = new Decrypted("GUESS", cipherText);
+                for(int i = 0; i < AMOUNT_OF_ALGOS && !decrypted.isDecrypted(); i++) {
+                    switch(i) {
+                        case 0:
+                            decrypted = decryptCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
+                            break;
                     }
                 }
         }
         
-        if(plainText == null) {
+        if(decrypted == null) {
+            return false;
+        } else if(!decrypted.isDecrypted()) {
+            System.out.println("Unable to decrypt your cipher!");
             return false;
         }
-        System.out.println("Ciphertext: " + cipherText);
-        System.out.println("Plaintext: " + plainText);
-        System.out.println("Key: " + key);
-        System.out.println("Time needed in milliseconds: " + timeNeededInMilliseconds);
+        stopwatch.stop();
+
+        System.out.println("Decrypted ciphertext!");
+        System.out.println("Algorithm: " + decrypted.getAlgorithm());
+        System.out.println("Cipher text: " + decrypted.getCipherText());
+        System.out.println("Plain text: " + decrypted.getPlainText());
+        System.out.println("Key: " + decrypted.getKey());
+        System.out.println("Time needed in milliseconds: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+        
         
         return true;
     }
     
-    public static boolean isCorrect(String plainText, File dictionary, int minimumCorrect) {
+    public static boolean isCorrect(String plainText, String[] dictionary, int minimumCorrect) {
         boolean cracked = false;
         int correctWords = 0;
-        
-        try(Scanner scanner = new Scanner(dictionary)) {
-            while(scanner.hasNextLine() && !cracked) {
-                String line = scanner.nextLine();
-                if (line.length() > 3) {
-                    if (plainText.contains(line)) {
-                        correctWords++;
-                        if (correctWords >= minimumCorrect) {
-                            cracked = true;
-                        }
+
+        for (String word :
+                dictionary) {
+            if (word.length() > 3) {
+                if (plainText.contains(word)) {
+                    correctWords++;
+                    if (correctWords >= minimumCorrect) {
+                        cracked = true;
+                        break;
                     }
                 }
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found!");
-            e.printStackTrace();
-            return false;
         }
         
         return cracked;
+    }
+    
+    public static Decrypted decryptCaesarsCipher(String cipherText, String[] dictionary, int minimumCorrect) {
+        CaesarsCipherObject caesarsCipherObject = new CaesarsCipherObject(cipherText);
+        boolean cracked = false;
+        for(int i = 0; i < 26; i++) {
+            if(i == 0) {
+                continue; // CipherText would already be plaintext...
+            }
+            String currentTry = caesarsCipherObject.decrypt(i);
+
+            if(isCorrect(currentTry, dictionary, minimumCorrect)) cracked = true;
+
+            if(cracked) {
+                return new Decrypted("caesar", cipherText, currentTry, i + "");
+            }
+        }
+        return new Decrypted("caesar", cipherText);
     }
 }
