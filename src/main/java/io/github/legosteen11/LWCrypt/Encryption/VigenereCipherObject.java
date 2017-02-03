@@ -2,9 +2,7 @@ package io.github.legosteen11.LWCrypt.Encryption;
 
 import io.github.legosteen11.LWCrypt.Util.CharUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by wouter on 2-2-17.
@@ -45,6 +43,7 @@ public class VigenereCipherObject {
     }
 
     public String encrypt(String plainText, String key) {
+        plainText = plainText.toLowerCase();
         this.key = key;
         this.plainText = plainText;
 
@@ -105,13 +104,74 @@ public class VigenereCipherObject {
         return distanceList.stream().mapToInt(i->i).toArray();
     }
     
-    public static int[] possibleKeySizes(int distanceBetweenPositions) {
+    public static ArrayList<Integer> possibleKeySizes(int distanceBetweenPositions) {
         ArrayList<Integer> possibleKeySizes = new ArrayList<>();
         for(double i = 1; i <= distanceBetweenPositions; i++) {
             if(distanceBetweenPositions / i % 1 == 0) possibleKeySizes.add((int) i);
         }
         
-        return possibleKeySizes.stream().mapToInt(i->i).toArray();
+        return possibleKeySizes;
+    }
+    
+    public static int mostLikelyKeySize(String string) {
+        String[] triplets = stringToTriplets(string);
+        ArrayList<Integer> possibleKeySizesList = new ArrayList<>();
+        for (String triplet :
+                triplets) {
+            int[] distancesBetweenPositions = distanceBetweenPositions(positionsInString(triplet, string));
+            for (int distanceBetweenPositions :
+                    distancesBetweenPositions) {
+                possibleKeySizesList.addAll(possibleKeySizes(distanceBetweenPositions));
+            }
+        }
+        int[] keySizes = {0,0,0};
+        int[] keySizeFreq = {0,0,0};
+
+        for (int i = 0; i < 20; i++) {
+            if(i < 3) continue;
+            int frequency = Collections.frequency(possibleKeySizesList, i);
+            if(frequency > keySizeFreq[2]) {
+                if(frequency > keySizeFreq[1]) {
+                    if (frequency > keySizeFreq[0]) {
+                        keySizeFreq[2] = keySizeFreq[1];
+                        keySizes[2] = keySizes[1];
+                        keySizeFreq[1] = keySizeFreq[0];
+                        keySizes[1] = keySizes[0];
+                        keySizeFreq[0] = frequency;
+                        keySizes[0] = i;
+                    } else {
+                        keySizeFreq[2] = keySizeFreq[1];
+                        keySizes[2] = keySizes[1];
+                        keySizeFreq[1] = frequency;
+                        keySizes[1] = i;
+                    }
+                } else {
+                    keySizeFreq[2] = frequency;
+                    keySizes[2] = i;
+                }
+            }
+        }
+        
+        if(keySizeFreq[0] == keySizeFreq[1]) {
+            if(keySizes[0] < keySizes[1]) {
+                int oldFirstKeySize = keySizes[0];
+                keySizes[0] = keySizes[1];
+                keySizes[1] = oldFirstKeySize;
+                
+            }
+        }
+        
+        System.out.println("These are the three most likely key sizes: ");
+        for (int i = 0; i < 3; i++) {
+            System.out.println("Key size " + keySizes[i] + " occurs " + keySizeFreq[i] + " times.");
+        }
+        return keySizes[0];
+    }
+
+    public static void main(String[] args) {
+        String string = "nittoriurtikferkveuloldeotewxbekdwedqoevoslwetedwaajnevjkagacofvoslwetedqoevqengogikgieryudsdwelonicxielsniwneryovad";
+        String string2 = "duxswwwqymiezvjxzslmexhdwysseueexnwqucvweepvmyszdtadhvnwooxbsajuwxzslmexkfwiusehesmjonsnfndmxnwysbzdnuikaswsuxrsimsq";
+        System.out.println("Most likely keysize = " + mostLikelyKeySize(string2));
     }
     
     public String getCipherText() {
