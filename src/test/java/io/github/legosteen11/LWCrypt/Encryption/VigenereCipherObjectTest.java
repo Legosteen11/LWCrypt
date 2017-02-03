@@ -13,22 +13,25 @@ public class VigenereCipherObjectTest {
     public VigenereCipherObject vigenereCipherObjectCipher;
     
     public static final String TEST_STRING = "hoiikbenwouterenditismijntestberichtjeikhoopdatditwerktdatzouwelprettigzijneigenlijk";
-    public static final String TEST_KEY = "hahafruithagel";
+    public static final String TEST_STRING_ENCRYPTED = "roiaubefgoulorefnitacmibxtekdbejschlteicroohnatvstwwbktvktzgewedzreldigrsjnwsgefvijc";
+    public static final String TEST_KEY = "kaas";
 
     @Before
     public void setUp() throws Exception {
-        
-
+        vigenereCipherObjectPlain = new VigenereCipherObject();
+        vigenereCipherObjectCipher = new VigenereCipherObject(vigenereCipherObjectPlain.encrypt(TEST_STRING, TEST_KEY));
     }
 
     @Test
     public void decrypt() throws Exception {
-
+        assertEquals(TEST_STRING, vigenereCipherObjectCipher.decrypt(TEST_KEY));
+        assertEquals(TEST_STRING, vigenereCipherObjectPlain.getPlainText());
     }
 
     @Test
     public void encrypt() throws Exception {
-
+        assertEquals(TEST_STRING_ENCRYPTED, vigenereCipherObjectPlain.encrypt(TEST_STRING, TEST_KEY));
+        assertEquals(TEST_STRING_ENCRYPTED, vigenereCipherObjectCipher.encrypt(TEST_STRING, TEST_KEY));
     }
 
 }

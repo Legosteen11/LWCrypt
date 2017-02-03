@@ -11,6 +11,10 @@ public class VigenereCipherObject {
     private String cipherText;
     private String plainText;
     private String key;
+    
+    public VigenereCipherObject() {
+        
+    }
 
     public VigenereCipherObject(String cipherText) {
         this.cipherText = cipherText;
@@ -24,11 +28,11 @@ public class VigenereCipherObject {
         int currentKeyChar = 0;
         for (char character :
                 cipherText.toCharArray()) {
-            if(currentKeyChar > key.length()) {
+            if(currentKeyChar >= key.length()) {
                 currentKeyChar = 0;
             }
             int cipherCharInt = CharUtils.CharToMod26(character);
-            int plainCharInt = CaesarsCipherObject.decryptCharacter(cipherCharInt, key.charAt(currentKeyChar)); // E(x) = x + key (mod 26)
+            int plainCharInt = CaesarsCipherObject.decryptCharacter(cipherCharInt, CharUtils.CharToMod26(key.charAt(currentKeyChar))); // E(x) = x + key (mod 26)
             plainTextBuilder.append(CharUtils.Mod26ToChar(plainCharInt));
             currentKeyChar++;
         }
@@ -47,11 +51,11 @@ public class VigenereCipherObject {
         int currentKeyChar = 0;
         for (char character :
                 plainText.toCharArray()) {
-            if(currentKeyChar > key.length()) {
+            if(currentKeyChar >= key.length()) {
                 currentKeyChar = 0;
             }
             int cipherCharInt = CharUtils.CharToMod26(character);
-            int plainCharInt = CaesarsCipherObject.encryptCharacter(cipherCharInt, key.charAt(currentKeyChar)); // E(x) = x + key (mod 26)
+            int plainCharInt = CaesarsCipherObject.encryptCharacter(cipherCharInt, CharUtils.CharToMod26(key.charAt(currentKeyChar))); // E(x) = x + key (mod 26)
             cipherTextBuilder.append(CharUtils.Mod26ToChar(plainCharInt));
             currentKeyChar++;
         }
