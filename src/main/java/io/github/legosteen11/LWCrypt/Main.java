@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import io.github.legosteen11.LWCrypt.Encryption.CaesarsCipherObject;
 import io.github.legosteen11.LWCrypt.Encryption.Decrypted;
 import io.github.legosteen11.LWCrypt.Encryption.VigenereCipherObject;
+import io.github.legosteen11.LWCrypt.Util.CharUtils;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -128,7 +129,7 @@ public class Main {
     
     public static boolean crack(String algo, String cipherText, String language, int correctWordsNeeded, boolean keyFromDict, int maximumWords) {
         String dictionaryPath = "en_dict.txt";
-        Decrypted decrypted = null;
+        Decrypted[] decryptedArray = new Decrypted[1];
         switch (language) {
             case "nl":
                 dictionaryPath = "nl_dict.txt";
@@ -137,11 +138,9 @@ public class Main {
                 dictionaryPath = "en_dict.txt";
                 break;
         }
-        //File inputDictionary;
         InputStream inputDictionary;
         String[] dictionaryArray = null;
         try {
-            //inputDictionary = new File(Main.class.getClassLoader().getResource(dictionaryPath).getFile());
             inputDictionary = Main.class.getClassLoader().getResourceAsStream(dictionaryPath);
         } catch (NullPointerException e) {
             return false;
@@ -158,41 +157,52 @@ public class Main {
         switch (algo) {
             case "caesar":
                 System.out.println("Using Caesar algorithm.");
-                decrypted = crackCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
+                decryptedArray[0] = crackCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
                 break;
             case "vigenere":
                 System.out.println("Using Vigenere algorithm.");
-                decrypted = crackVigenere(cipherText, dictionaryArray, correctWordsNeeded, keyFromDict, maximumWords);
+                decryptedArray = crackVigenere(cipherText, dictionaryArray, correctWordsNeeded, keyFromDict, maximumWords);
                 break;
             case "GUESS":
                 System.out.println("Guessing algorithm... ");
-                decrypted = new Decrypted("GUESS", cipherText);
-                for(int i = 0; i < AMOUNT_OF_ALGOS && !decrypted.isDecrypted(); i++) {
+                decryptedArray[0] = new Decrypted("GUESS", cipherText);
+                for(int i = 0; i < AMOUNT_OF_ALGOS && !decryptedArray[0].isDecrypted(); i++) {
                     switch(i) {
                         case 0:
-                            decrypted = crackCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
+                            decryptedArray[0] = crackCaesarsCipher(cipherText, dictionaryArray, correctWordsNeeded);
                             break;
                     }
                 }
         }
-        
-        if(decrypted == null) {
-            return false;
-        } else if(!decrypted.isDecrypted()) {
-            System.out.println("Unable to decrypt your cipher!");
-            return false;
-        }
         stopwatch.stop();
 
-        System.out.println("Decrypted ciphertext!");
-        System.out.println("Algorithm: " + decrypted.getAlgorithm());
-        System.out.println("Cipher text: " + decrypted.getCipherText());
-        System.out.println("Plain text: " + decrypted.getPlainText());
-        System.out.println("Key: " + decrypted.getKey());
-        System.out.println("Time needed in milliseconds: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
-        
-        
-        return true;
+
+        if (decryptedArray != null && decryptedArray.length > 0) {
+            System.out.println("Decrypted ciphertext!");
+            System.out.println("Algorithm: " + decryptedArray[0].getAlgorithm());
+            if(decryptedArray.length == 1) {
+                System.out.println("Cipher text: " + decryptedArray[0].getCipherText());
+                System.out.println("Plain text: " + decryptedArray[0].getPlainText());
+                System.out.println("Key: " + decryptedArray[0].getKey());
+            } else {
+                System.out.println(decryptedArray.length + " possible keys.");
+                for (Decrypted decryptedObj :
+                        decryptedArray) {
+                    System.out.println("Cipher text: " + decryptedObj.getCipherText());
+                    System.out.println("Plain text: " + decryptedObj.getPlainText());
+                    System.out.println("Key: " + decryptedObj.getKey());
+                    System.out.println("---------------------------------");
+                }
+            }
+            
+            System.out.println("Time needed in milliseconds: " + stopwatch.elapsed(TimeUnit.MILLISECONDS));
+            
+            return true;
+        }
+
+
+        System.out.println("Unable to decrypt your cipher!");
+        return false;
     }
     
     public static boolean isCorrect(String plainText, String[] dictionary, int minimumCorrect) {
@@ -233,7 +243,8 @@ public class Main {
         return new Decrypted("caesar", cipherText);
     }
     
-    public static Decrypted crackVigenere(String cipherText, String[] dictionary, int minimumCorrect, boolean keyFromDict, int maximumWords) { // dit is echt vet lastig
+    public static Decrypted[] crackVigenere(String cipherText, String[] dictionary, int minimumCorrect, boolean keyFromDict, int maximumWords) { // dit is echt vet lastig
+        cipherText = cipherText.toLowerCase();
         String algorithm = "vigenere";
         VigenereCipherObject vigenereCipherObject = new VigenereCipherObject(cipherText);
         boolean cracked = false;
@@ -243,20 +254,27 @@ public class Main {
             String[] completeDictionaryArray = dictionaryList.toArray(new String[0]);
             ArrayList<Integer> positionsList = new ArrayList<>();
             String currentKey = "";
+            String[] keys = new String[maximumWords];
             for(int i = 0; i < maximumWords; i++) {
                 positionsList.add(0);
             }
             while(positionsList.get(0) < completeDictionaryArray.length) {
-                for(int i = 0; i < maximumWords; i++) {
+                for(int i = 0; i < maximumWords; i++) { // Generate key
                     int currentPos = positionsList.get(i);
-                    currentKey += completeDictionaryArray[currentPos];
+                    String currentWord = completeDictionaryArray[currentPos];
+                    currentKey += currentWord;
                     
-                    currentPos++;
-                    positionsList.set(i, currentPos);
-                    if(currentPos >= completeDictionaryArray.length) {
-                        if(i != 0) {
-                            int nextPos = positionsList.get(i - 1) + 1;
-                            positionsList.set(i - 1, nextPos);
+                    keys[i] = currentWord;
+                    
+                    if(i == maximumWords -1) {
+                        currentPos++;
+                        positionsList.set(i, currentPos);
+                        if(currentPos >= completeDictionaryArray.length) {
+                            if(i != 0) {
+                                positionsList.set(i, 0);
+                                int nextPos = positionsList.get(i - 1) + 1;
+                                positionsList.set(i - 1, nextPos);
+                            }
                         }
                     }
                 }
@@ -265,14 +283,57 @@ public class Main {
                 String plainText = vigenereCipherObject.decrypt(currentKey);
                 
                 if(isCorrect(plainText, dictionary, minimumCorrect)) {
-                    return new Decrypted(algorithm, cipherText, plainText, currentKey);
+                    Decrypted[] decrypteds = new Decrypted[maximumWords + 1];
+                    for(int i = 0; i < maximumWords; i++) {
+                        decrypteds[i] = new Decrypted(algorithm, cipherText, vigenereCipherObject.decrypt(keys[i]), keys[i]);
+                    }
+                    decrypteds[maximumWords] = new Decrypted(algorithm, cipherText, plainText, currentKey);
+                    
+                    return decrypteds;
                 }
                 
                 
                 currentKey = "";
             }
+        } else {
+            int maxChars = 27;
+            ArrayList<Integer> positionList = new ArrayList<>();
+            String currentKey = "";
+            for(int i = 0; i < maximumWords; i++) {
+                positionList.add(0);
+            }
+            while(positionList.get(0) < maxChars) {
+                for(int i = 0; i < maximumWords; i++) { // Generate key
+                    int currentPos = positionList.get(i);
+                    if(currentPos == 27) {
+                        currentKey += "";
+                    } else {
+                        currentKey += Character.toString(CharUtils.Mod26ToChar(currentPos));
+                    }
+                    
+                    if(i == maximumWords - 1) {
+                        currentPos++;
+                        positionList.set(i, currentPos);
+                        if (currentPos >= maxChars) {
+                            if (i != 0) {
+                                int nextPos = positionList.get(i - 1) + 1;
+                                positionList.set(i - 1, nextPos);
+                            }
+                        }
+                    }
+                }
+
+                if(currentKey.equals("")) continue;
+                String plainText = vigenereCipherObject.decrypt(currentKey);
+
+                if(isCorrect(plainText, dictionary, minimumCorrect)) {
+                    return new Decrypted[]{new Decrypted(algorithm, cipherText, plainText, currentKey)};
+                }
+                
+                currentKey = "";
+            }
         }
-        
-        return new Decrypted(algorithm, cipherText);
+
+        return new Decrypted[]{new Decrypted(algorithm, cipherText)};
     }
 }
