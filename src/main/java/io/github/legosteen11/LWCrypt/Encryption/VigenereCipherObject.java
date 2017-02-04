@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
  */
 public class VigenereCipherObject {
     public static final HashMap<Character, Double> NL_LETTER_FREQUENCY = nlLetterFrequencyMap();
+    public static final HashMap<Character, Double> EN_LETTER_FREQUENCY = enLetterFrequencyMap();
     private String cipherText;
     private String plainText;
     private String key;
@@ -81,11 +82,11 @@ public class VigenereCipherObject {
         ArrayList<Integer> distances = new ArrayList<>();
         for (int position :
                 positions) {
-            for (int i = 0; i < positions.length; i++) {
-                int difference = positions[i] - position;
-                
-                if(difference <= 0) continue;
-                
+            for (int positionNext : positions) {
+                int difference = positionNext - position;
+
+                if (difference <= 0) continue;
+
                 distances.add(difference);
             }
         }
@@ -193,7 +194,7 @@ public class VigenereCipherObject {
         HashMap<Character, Integer> charAmountMap = new HashMap<>();
         for (int i = 0; i < string.length(); i++) {
             char character = string.charAt(i);
-            Integer value = charAmountMap.get(new Character(character));
+            Integer value = charAmountMap.get(character);
             if (value == null) {
                 charAmountMap.put(character, 1);
             } else {
@@ -211,7 +212,7 @@ public class VigenereCipherObject {
             HashMap<Character, Integer> currentCharAmounts = new HashMap<>();
             int totalChars = 0;
             for (int j = 0; j < 26; j++) {
-                int amount = characterIntegerHashMap.getOrDefault(CharUtils.Mod26ToChar(Modulo.performModulo(new Integer(j + i), 26)), 0);
+                int amount = characterIntegerHashMap.getOrDefault(CharUtils.Mod26ToChar(Modulo.performModulo(j + i, 26)), 0);
                 currentCharAmounts.put(CharUtils.Mod26ToChar(j), amount);
                 totalChars+=amount;
             }
@@ -244,18 +245,6 @@ public class VigenereCipherObject {
         VigenereCipherObject vigenereCipherObject = new VigenereCipherObject(cipherText);
         String plainText = vigenereCipherObject.decrypt(key);
         return new Decrypted("vigenere", cipherText, plainText, key);
-    }
-
-    public static void main(String[] args) {
-        String string = "nittoriurtikferkveuloldeotewxbekdwedqoevoslwetedwaajnevjkagacofvoslwetedqoevqengogikgieryudsdwelonicxielsniwneryovad";
-        String string2 = "duxswwwqymiezvjxzslmexhdwysseueexnwqucvweepvmyszdtadhvnwooxbsajuwxzslmexkfwiusehesmjonsnfndmxnwysbzdnuikaswsuxrsimsq";
-        String voorbeeld = "BVVZQGDWIPIUIXQGFVIUCUQKHTVTTDXVUXITVTMZVVVDUYEPMQGZAIOWKMVZDXOIQCSMAUYJDSAGNMPTTVNXPTTPMZTJMAUHBCRPXXMCUIRVKLWRVKUCDQHPTCAEMCXMXADELHMIVZIQCXMXMAUSPQXEMVPPEHIHTEBMSBZTNATEQWIPRZZADIOIXSKLEFTIWRQXELMSKVMPBPIMRBGZMQSTKIPXTEHMVCMIRPTMWVYEVVTBALAHUCDQHPTCAMEPRVKQIFWRPSRBIDTVVKQIRTHYTKLILTVQKQCJKLMEDWIFOZRRPPKSPQXEMVAUXMPUYBQWMPEBAQTYWRPTILDQHVVZQTIBMS";
-        System.out.println("Most likely keysize = " + mostLikelyKeySize(voorbeeld));
-        System.out.println("Cracking: ");
-        Decrypted result = crack(voorbeeld, NL_LETTER_FREQUENCY);
-        System.out.println("Key: " + result.getKey());
-        System.out.println("Ciphertext: " + result.getCipherText());
-        System.out.println("Plaintext: " + result.getPlainText());
     }
     
     public String getCipherText() {
@@ -300,4 +289,37 @@ public class VigenereCipherObject {
         frequencies.put('z', 1.39);
         return frequencies;
     }
+    
+    private static HashMap<Character, Double> enLetterFrequencyMap() { // Create a map with all the dutch letter frequencies.
+        HashMap<Character, Double> frequencies = new HashMap<>();
+        frequencies.put('a', 8.167);
+        frequencies.put('b', 1.492);
+        frequencies.put('c', 2.782);
+        frequencies.put('d', 4.253);
+        frequencies.put('e', 12.702);
+        frequencies.put('f', 2.228);
+        frequencies.put('g', 2.015);
+        frequencies.put('h', 6.094);
+        frequencies.put('i', 6.966);
+        frequencies.put('j', 0.153);
+        frequencies.put('k', 0.772);
+        frequencies.put('l', 4.025);
+        frequencies.put('m', 2.406);
+        frequencies.put('n', 6.749);
+        frequencies.put('o', 7.507);
+        frequencies.put('p', 1.929);
+        frequencies.put('q', 0.095);
+        frequencies.put('r', 5.987);
+        frequencies.put('s', 6.327);
+        frequencies.put('t', 9.056);
+        frequencies.put('u', 2.758);
+        frequencies.put('v', 0.978);
+        frequencies.put('w', 2.360);
+        frequencies.put('x', 0.150);
+        frequencies.put('y', 1.974);
+        frequencies.put('z', 0.074);
+        return frequencies;
+    }
+    
+    
 }

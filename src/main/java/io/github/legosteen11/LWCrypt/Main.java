@@ -9,6 +9,7 @@ import io.github.legosteen11.LWCrypt.Util.CharUtils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -72,6 +73,37 @@ public class Main {
                     System.out.println("Usage: java -jar LWCrypt.jar crack <algorithm> <language> <correct words needed> <cipher> <get key from dictionary (true/false)> <maximum words from dictionary/maximum letters (if dictionary disabled)>");
                     System.out.println("You can use these algorithms: GUESS, caesar, vigenere");
                     System.out.println("You can use these languages: nl, en");
+                    break;
+                case "crackvigenere":
+                    if(args.length == 3) {
+                        String language = args[1];
+                        String cipherText= args[2];
+                        HashMap<Character, Double> letterFrequencies;
+                        switch(language) {
+                            case "nl":
+                                letterFrequencies = VigenereCipherObject.NL_LETTER_FREQUENCY;
+                                break;
+                            case "en":
+                                letterFrequencies = VigenereCipherObject.EN_LETTER_FREQUENCY;
+                                break;
+                            default:
+                                letterFrequencies = VigenereCipherObject.EN_LETTER_FREQUENCY;
+                                break;
+                        }
+                        Stopwatch stopwatch = Stopwatch.createStarted();
+                        Decrypted decrypted = VigenereCipherObject.crack(cipherText, letterFrequencies);
+                        stopwatch.stop();
+                        System.out.println("Cipher decrypted!");
+                        System.out.println("Ciphertext: " + cipherText);
+                        System.out.println("Plaintext: " + decrypted.getPlainText());
+                        System.out.println("Key: " + decrypted.getKey());
+                        System.out.println("Total time to decrypt: " + stopwatch.elapsed(TimeUnit.MILLISECONDS) + " milliseconds");
+                        return;    
+                    }
+
+                    System.out.println("Usage: java -jar LWCrypt.jar crackvigenere <language> <cipher>");
+                    System.out.println("You can use these languages: nl, en");
+                    
             }
         }
         System.out.println("Use like this: java -jar LWCrypt.jar <option>");
