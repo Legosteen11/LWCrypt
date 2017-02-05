@@ -184,7 +184,7 @@ public class VigenereCipherObject {
         HashMap<Character, Double> frequencyMap = new HashMap<>();
         for (int i = 0; i < 26; i++) {
             int charAmount = characterIntegerHashMap.getOrDefault(CharUtils.Mod26ToChar(i), 0);
-            double frequency =  (charAmount / (double) mapSizeTotal) * 100;
+            double frequency = (charAmount / (double) mapSizeTotal) * 100;
             frequencyMap.put(CharUtils.Mod26ToChar(i), frequency);
         }
         return frequencyMap;
@@ -205,7 +205,6 @@ public class VigenereCipherObject {
     }
     
     public static char mostLikelyKey(HashMap<Character, Integer> characterIntegerHashMap, HashMap<Character, Double> correctFrequencies, int totalSize) {
-        HashMap<Character, Double> frequencyDeltaForEachKey = new HashMap<>();
         char mostLikelyKey = 'a';
         double delta = Integer.MAX_VALUE;
         for (int i = 0; i < 26; i++) {
@@ -221,7 +220,6 @@ public class VigenereCipherObject {
                 delta = frequencyDelta;
                 mostLikelyKey = CharUtils.Mod26ToChar(i);
             }
-            frequencyDeltaForEachKey.put(CharUtils.Mod26ToChar(i), frequencyDelta);
         }
         
         return mostLikelyKey;
@@ -230,8 +228,6 @@ public class VigenereCipherObject {
     public static Decrypted crack(String cipherText, HashMap<Character, Double> correctFrequencies) {
         cipherText = cipherText.toLowerCase();
         int mostLikelyKeySize = mostLikelyKeySize(cipherText);
-        ArrayList<HashMap<Character, Integer>> charArrayWithamount = new ArrayList<>();
-        ArrayList<Character> mostLikelyCharacters = new ArrayList<>();
         String key = "";
         for(int i = 0; i < mostLikelyKeySize; i++) {
             ArrayList<Character> currentChars = new ArrayList<>();
@@ -239,7 +235,6 @@ public class VigenereCipherObject {
                 currentChars.add(cipherText.charAt(j));
             }
             HashMap<Character, Integer> charAmounts = charAmounts(currentChars.stream().map(Object::toString).collect(Collectors.joining()));
-            charArrayWithamount.add(charAmounts);
             key += mostLikelyKey(charAmounts, correctFrequencies, cipherText.length());
         }
         VigenereCipherObject vigenereCipherObject = new VigenereCipherObject(cipherText);
