@@ -2,8 +2,9 @@ package io.github.legosteen11.LWCrypt.Encryption;
 
 import io.github.legosteen11.LWCrypt.Util.CharUtils;
 import io.github.legosteen11.LWCrypt.Util.Modulo;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by wouter on 2-2-17.
@@ -53,6 +54,36 @@ public class CaesarsCipherObject {
         this.cipherText = cipherTextBuilder.toString();
 
         return this.cipherText;
+    }
+    
+    public static Decrypted crack(String cipherText, HashMap<Character, Double> correctFrequencies) {
+        cipherText = cipherText.toLowerCase();
+        int textLength = cipherText.length();
+        
+        HashMap<Character, Integer> characterCountMap = new HashMap<>();
+        for (int i = 0; i < 26; i++) {
+            characterCountMap.put(CharUtils.Mod26ToChar(i), StringUtils.countMatches(cipherText, CharUtils.Mod26ToChar(i)));
+        }
+        
+        int bestKey = 0;
+        double bestFrequencyDelta = Double.MAX_VALUE;
+        for (int i = 0; i < 26; i++) {
+            HashMap<Character, Integer> currentCountMap = new HashMap<>();
+            for (int j = 0; j < 26; j++) {
+                currentCountMap.put(CharUtils.Mod26ToChar(j), characterCountMap.get(CharUtils.Mod26ToChar(Modulo.performModulo(j + i, 26))));
+            }
+            
+            double currentFrequencyDelta = VigenereCipherObject.getFrequencyDelta(
+                    VigenereCipherObject.createFrequencies(currentCountMap, textLength), 
+                    correctFrequencies);
+            
+            if(currentFrequencyDelta < bestFrequencyDelta) {
+                bestFrequencyDelta = currentFrequencyDelta;
+                bestKey = i;
+            }
+        }
+        
+        return new Decrypted("caesar", cipherText, new CaesarsCipherObject(cipherText).decrypt(bestKey), bestKey + "");
     }
 
     public String getCipherText() {

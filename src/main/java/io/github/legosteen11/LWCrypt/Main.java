@@ -105,7 +105,38 @@ public class Main {
 
                     System.out.println("Usage: java -jar LWCrypt.jar crackvigenere <language> <cipher> (key length)");
                     System.out.println("You can use these languages: nl, en");
+                    break;
+                case "crackcaesar":
+                    if(args.length == 3) {
+                        String language = args[1];
+                        String cipherText = args[2];
+
+                        HashMap<Character, Double> letterFrequencies;
+                        switch(language) {
+                            case "nl":
+                                letterFrequencies = VigenereCipherObject.NL_LETTER_FREQUENCY;
+                                break;
+                            case "en":
+                                letterFrequencies = VigenereCipherObject.EN_LETTER_FREQUENCY;
+                                break;
+                            default:
+                                letterFrequencies = VigenereCipherObject.EN_LETTER_FREQUENCY;
+                                break;
+                        }
+                        Stopwatch stopwatch = Stopwatch.createStarted();
+                        Decrypted decrypted = CaesarsCipherObject.crack(cipherText, letterFrequencies);
+                        stopwatch.stop();
+                        System.out.println("Cipher decrypted!");
+                        System.out.println("Ciphertext: " + cipherText);
+                        System.out.println("Plaintext: " + decrypted.getPlainText());
+                        System.out.println("Key: " + decrypted.getKey());
+                        System.out.println("Total time to decrypt: " + stopwatch.elapsed(TimeUnit.MILLISECONDS) + " milliseconds");
+                        return;
+                    }
                     
+                    System.out.println("Usage: java -jar LWCrypt.jar crackcaesar <language> <cipher>");
+                    System.out.println("You can use these languages: nl, en");
+                    break;
             }
         }
         System.out.println("Use like this: java -jar LWCrypt.jar <option>");
