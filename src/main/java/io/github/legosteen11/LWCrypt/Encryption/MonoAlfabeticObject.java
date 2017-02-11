@@ -61,12 +61,13 @@ public class MonoAlfabeticObject {
         return (char[]) ArrayUtils.toPrimitive(mostLikelyKeys);
     }
     
-    public static String[] createKeys(HashMap<Character, Character[]> characterHashMap) {
+    public static String[] createKeys(HashMap<Character, Character[]> characterHashMap, int minimumDelta) {
         ArrayList<String> keys = new ArrayList<>();
         HashMap<Character, Integer> charPositionsList = new HashMap<>();
         for (int i = 0; i < characterHashMap.get('a')[characterHashMap.get('a').length]; i++) {
             for(int j = 0; j < 26; j++) {
                 // TODO: do this lol
+
             }
         }
         // TODO: fix this

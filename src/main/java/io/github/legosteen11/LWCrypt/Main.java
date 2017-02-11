@@ -75,10 +75,11 @@ public class Main {
                     System.out.println("You can use these languages: nl, en");
                     break;
                 case "crackvigenere":
-                    if(args.length == 3) {
+                    if(args.length == 3 || args.length == 4) {
                         String language = args[1];
                         String cipherText= args[2];
                         HashMap<Character, Double> letterFrequencies;
+                        int keyLength = args.length == 4 ? Integer.parseInt(args[3]) : 0;
                         switch(language) {
                             case "nl":
                                 letterFrequencies = VigenereCipherObject.NL_LETTER_FREQUENCY;
@@ -91,7 +92,8 @@ public class Main {
                                 break;
                         }
                         Stopwatch stopwatch = Stopwatch.createStarted();
-                        Decrypted decrypted = VigenereCipherObject.crack(cipherText, letterFrequencies);
+                        Decrypted decrypted = keyLength == 0 ? VigenereCipherObject.crack(cipherText, letterFrequencies) :
+                                VigenereCipherObject.crack(cipherText, letterFrequencies, keyLength);
                         stopwatch.stop();
                         System.out.println("Cipher decrypted!");
                         System.out.println("Ciphertext: " + cipherText);
@@ -101,7 +103,7 @@ public class Main {
                         return;    
                     }
 
-                    System.out.println("Usage: java -jar LWCrypt.jar crackvigenere <language> <cipher>");
+                    System.out.println("Usage: java -jar LWCrypt.jar crackvigenere <language> <cipher> (key length)");
                     System.out.println("You can use these languages: nl, en");
                     
             }

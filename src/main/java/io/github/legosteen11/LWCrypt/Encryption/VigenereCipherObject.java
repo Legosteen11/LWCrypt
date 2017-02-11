@@ -228,10 +228,15 @@ public class VigenereCipherObject {
     public static Decrypted crack(String cipherText, HashMap<Character, Double> correctFrequencies) {
         cipherText = cipherText.toLowerCase();
         int mostLikelyKeySize = mostLikelyKeySize(cipherText);
+        return crack(cipherText, correctFrequencies, mostLikelyKeySize);
+    }
+
+    public static Decrypted crack(String cipherText, HashMap<Character, Double> correctFrequencies, int keySize) {
+        cipherText = cipherText.toLowerCase();
         String key = "";
-        for(int i = 0; i < mostLikelyKeySize; i++) {
+        for(int i = 0; i < keySize; i++) {
             ArrayList<Character> currentChars = new ArrayList<>();
-            for (int j = i; j < cipherText.length(); j+= mostLikelyKeySize) {
+            for (int j = i; j < cipherText.length(); j+= keySize) {
                 currentChars.add(cipherText.charAt(j));
             }
             HashMap<Character, Integer> charAmounts = charAmounts(currentChars.stream().map(Object::toString).collect(Collectors.joining()));
