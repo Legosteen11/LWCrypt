@@ -34,9 +34,10 @@ public class Main {
                         if(encrypt(algo, key, plainText)) {
                             return;
                         }
-                        System.out.println("Usage: java -jar LWCrypt.jar encrypt <algorithm> <key> <cipher>");
-                        System.out.println("You can use these algorithms: caesar, vigenere");
                     }
+                    System.out.println("Usage: java -jar LWCrypt.jar encrypt <algorithm> <key> <cipher>");
+                    System.out.println("You can use these algorithms: caesar, vigenere");
+                    break;
                 case "decrypt":
                     if(args.length == 4) {
                         String algo = args[1];
